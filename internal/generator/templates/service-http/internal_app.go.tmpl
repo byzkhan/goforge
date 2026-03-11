@@ -1,0 +1,63 @@
+package app
+
+import (
+	"context"
+	"log/slog"
+{{if .UsePostgres}}
+	"{{.Module}}/internal/platform/db"
+{{end}}{{if .UseOtel}}
+	"{{.Module}}/internal/platform/telemetry"
+{{end}}
+	"{{.Module}}/internal/config"
+	"{{.Module}}/internal/http/handlers"
+	"{{.Module}}/internal/http/routes"
+	"{{.Module}}/internal/platform/server"
+	"{{.Module}}/internal/platform/shutdown"
+	"{{.Module}}/internal/repository"
+	"{{.Module}}/internal/service"
+)
+
+// Run wires dependencies together and starts the HTTP server.
+// All dependency construction is explicit — no DI container, no reflection.
+func Run(cfg *config.Config, log *slog.Logger) error {
+	ctx := context.Background()
+{{if .UseOtel}}
+	// Telemetry
+	tp, err := telemetry.Init(ctx, "{{.Name}}")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tp.Shutdown(ctx) }()
+{{end}}
+{{if .UsePostgres}}
+	// Database
+	pool, err := db.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	repo := repository.NewPostgresExampleRepository(pool)
+{{else}}
+	repo := repository.NewInMemoryExampleRepository()
+{{end}}
+	// Service layer
+	exampleSvc := service.NewExampleService(repo)
+
+	// Handlers
+	healthHandler := handlers.NewHealthHandler({{if .UsePostgres}}pool{{end}})
+	exampleHandler := handlers.NewExampleHandler(exampleSvc, log)
+
+	// Router
+	mux := routes.New(routes.Deps{
+		Log:            log,
+		HealthHandler:  healthHandler,
+		ExampleHandler: exampleHandler,
+	})
+
+	// Server
+	srv := server.New(cfg.Addr(), mux, log)
+	log.Info("starting server", "addr", cfg.Addr())
+
+	return shutdown.ListenAndServe(ctx, srv, log)
+}

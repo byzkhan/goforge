@@ -1,0 +1,57 @@
+package handlers
+
+import (
+	"encoding/json"
+	"log/slog"
+	"net/http"
+
+	httputil "{{.Module}}/internal/http"
+	"{{.Module}}/internal/domain"
+	"{{.Module}}/internal/service"
+)
+
+// ExampleHandler handles example resource endpoints.
+type ExampleHandler struct {
+	svc *service.ExampleService
+	log *slog.Logger
+}
+
+// NewExampleHandler creates an ExampleHandler.
+func NewExampleHandler(svc *service.ExampleService, log *slog.Logger) *ExampleHandler {
+	return &ExampleHandler{svc: svc, log: log}
+}
+
+// List returns all example items.
+func (h *ExampleHandler) List(w http.ResponseWriter, r *http.Request) {
+	items, err := h.svc.ListItems(r.Context())
+	if err != nil {
+		h.log.Error("list items failed", "error", err)
+		httputil.Error(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	httputil.JSON(w, http.StatusOK, items)
+}
+
+// Create adds a new example item.
+func (h *ExampleHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httputil.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Name == "" {
+		httputil.Error(w, http.StatusBadRequest, "name is required")
+		return
+	}
+
+	item := domain.ExampleItem{Name: req.Name}
+	created, err := h.svc.CreateItem(r.Context(), item)
+	if err != nil {
+		h.log.Error("create item failed", "error", err)
+		httputil.Error(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	httputil.JSON(w, http.StatusCreated, created)
+}

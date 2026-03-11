@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Simple migration runner using psql.
+# For production, consider golang-migrate or goose.
+
+DB_URL="${DATABASE_URL:?DATABASE_URL is required}"
+DIR="$(cd "$(dirname "$0")/.." && pwd)/migrations"
+
+case "${1:-up}" in
+  up)
+    for f in "$DIR"/*.up.sql; do
+      echo "Applying $(basename "$f")..."
+      psql "$DB_URL" -f "$f"
+    done
+    ;;
+  down)
+    for f in $(ls -r "$DIR"/*.down.sql); do
+      echo "Rolling back $(basename "$f")..."
+      psql "$DB_URL" -f "$f"
+    done
+    ;;
+  *)
+    echo "Usage: $0 {up|down}"
+    exit 1
+    ;;
+esac

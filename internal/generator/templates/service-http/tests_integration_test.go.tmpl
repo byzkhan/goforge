@@ -1,0 +1,62 @@
+package tests
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"{{.Module}}/internal/domain"
+)
+
+func TestCreateAndListItems(t *testing.T) {
+	mux := setupRouter(t)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	// Create an item
+	body, _ := json.Marshal(map[string]string{"name": "test-item"})
+	resp, err := http.Post(srv.URL+"/api/v1/examples", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("create request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", resp.StatusCode)
+	}
+
+	var created domain.ExampleItem
+	if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
+		t.Fatalf("decode create response: %v", err)
+	}
+	if created.Name != "test-item" {
+		t.Fatalf("expected name test-item, got %q", created.Name)
+	}
+	if created.ID == "" {
+		t.Fatal("expected non-empty ID")
+	}
+
+	// List items
+	resp2, err := http.Get(srv.URL + "/api/v1/examples")
+	if err != nil {
+		t.Fatalf("list request: %v", err)
+	}
+	defer resp2.Body.Close()
+
+	if resp2.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp2.StatusCode)
+	}
+
+	var items []domain.ExampleItem
+	if err := json.NewDecoder(resp2.Body).Decode(&items); err != nil {
+		t.Fatalf("decode list response: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+	if items[0].Name != "test-item" {
+		t.Fatalf("expected name test-item, got %q", items[0].Name)
+	}
+}

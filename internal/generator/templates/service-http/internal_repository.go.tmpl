@@ -1,0 +1,51 @@
+package repository
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"sync"
+
+	"{{.Module}}/internal/domain"
+)
+
+// ExampleRepository defines the data access interface for example items.
+type ExampleRepository interface {
+	List(ctx context.Context) ([]domain.ExampleItem, error)
+	Create(ctx context.Context, item domain.ExampleItem) (domain.ExampleItem, error)
+}
+
+// InMemoryExampleRepository stores items in memory. Useful for development and testing.
+type InMemoryExampleRepository struct {
+	mu    sync.RWMutex
+	items []domain.ExampleItem
+}
+
+// NewInMemoryExampleRepository creates an in-memory repository.
+func NewInMemoryExampleRepository() *InMemoryExampleRepository {
+	return &InMemoryExampleRepository{}
+}
+
+func (r *InMemoryExampleRepository) List(_ context.Context) ([]domain.ExampleItem, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	out := make([]domain.ExampleItem, len(r.items))
+	copy(out, r.items)
+	return out, nil
+}
+
+func (r *InMemoryExampleRepository) Create(_ context.Context, item domain.ExampleItem) (domain.ExampleItem, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	item.ID = generateID()
+	r.items = append(r.items, item)
+	return item, nil
+}
+
+func generateID() string {
+	b := make([]byte, 8)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}

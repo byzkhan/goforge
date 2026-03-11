@@ -1,0 +1,47 @@
+package handlers
+
+import (
+	"net/http"
+{{if .UsePostgres}}
+	"context"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+{{end}}
+	httputil "{{.Module}}/internal/http"
+)
+
+// HealthHandler serves health and readiness checks.
+type HealthHandler struct {
+{{- if .UsePostgres}}
+	pool *pgxpool.Pool
+{{- end}}
+}
+
+// NewHealthHandler creates a HealthHandler.
+func NewHealthHandler({{if .UsePostgres}}pool *pgxpool.Pool{{end}}) *HealthHandler {
+	return &HealthHandler{
+	{{- if .UsePostgres}}
+		pool: pool,
+	{{- end}}
+	}
+}
+
+// Liveness returns 200 if the process is running.
+func (h *HealthHandler) Liveness(w http.ResponseWriter, r *http.Request) {
+	httputil.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// Readiness returns 200 if the service is ready to handle traffic.
+func (h *HealthHandler) Readiness(w http.ResponseWriter, r *http.Request) {
+{{- if .UsePostgres}}
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	if err := h.pool.Ping(ctx); err != nil {
+		httputil.Error(w, http.StatusServiceUnavailable, "database not ready")
+		return
+	}
+{{- end}}
+	httputil.JSON(w, http.StatusOK, map[string]string{"status": "ready"})
+}

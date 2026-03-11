@@ -1,0 +1,25 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"{{.Module}}/internal/app"
+	"{{.Module}}/internal/config"
+	"{{.Module}}/internal/platform/logger"
+)
+
+func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "config: %v\n", err)
+		os.Exit(1)
+	}
+
+	log := logger.New(cfg.LogLevel, os.Stdout)
+
+	if err := app.Run(cfg, log); err != nil {
+		log.Error("fatal error", "error", err)
+		os.Exit(1)
+	}
+}
