@@ -7,6 +7,7 @@ LDFLAGS := -ldflags "-X github.com/byzkhan/goforge/internal/version.Version=$(VE
 
 ## build: Compile goforge
 build:
+	mkdir -p bin/
 	go build $(LDFLAGS) -o bin/goforge ./cmd/goforge
 
 ## test: Run all tests

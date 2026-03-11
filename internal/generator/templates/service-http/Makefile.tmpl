@@ -9,6 +9,7 @@ run:
 
 ## build: Compile the binary
 build:
+	mkdir -p bin/
 	go build -o bin/$(BINARY) $(CMD)
 
 ## test: Run all tests
