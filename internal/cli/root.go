@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zaid/goforge/internal/version"
+	"github.com/byzkhan/goforge/internal/version"
 )
 
 const usage = `goforge — scaffold production-ready Go services

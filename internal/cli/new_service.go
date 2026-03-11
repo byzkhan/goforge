@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/zaid/goforge/internal/config"
-	"github.com/zaid/goforge/internal/generator"
-	"github.com/zaid/goforge/internal/postgen"
-	"github.com/zaid/goforge/internal/prompt"
+	"github.com/byzkhan/goforge/internal/config"
+	"github.com/byzkhan/goforge/internal/generator"
+	"github.com/byzkhan/goforge/internal/postgen"
+	"github.com/byzkhan/goforge/internal/prompt"
 )
 
 func runNewService(args []string) {
@@ -105,6 +105,9 @@ Flags:
 	// Check target directory doesn't exist.
 	if _, err := os.Stat(opts.OutputDir); err == nil {
 		fmt.Fprintf(os.Stderr, "Error: directory %q already exists\n", opts.OutputDir)
+		os.Exit(1)
+	} else if !os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "Error: cannot stat %q: %v\n", opts.OutputDir, err)
 		os.Exit(1)
 	}
 

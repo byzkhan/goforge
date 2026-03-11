@@ -10,8 +10,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/zaid/goforge/internal/config"
-	"github.com/zaid/goforge/pkg/fsutil"
+	"github.com/byzkhan/goforge/internal/config"
+	"github.com/byzkhan/goforge/pkg/fsutil"
 )
 
 // Generator produces project files from a template set.
@@ -82,9 +82,8 @@ func (g *Generator) WriteToDisk(result *Result, baseDir string) error {
 	for relPath, content := range result.Files {
 		absPath := filepath.Join(baseDir, relPath)
 		perm := os.FileMode(0o644)
-		// Make scripts executable.
-		if strings.HasSuffix(relPath, ".sh") || strings.HasPrefix(filepath.Base(relPath), "Makefile") {
-			perm = 0o644
+		if strings.HasSuffix(relPath, ".sh") {
+			perm = 0o755
 		}
 		if err := fsutil.WriteFile(absPath, content, perm); err != nil {
 			return fmt.Errorf("write %s: %w", relPath, err)

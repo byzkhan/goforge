@@ -3,7 +3,7 @@
 VERSION ?= dev
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE    := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-LDFLAGS := -ldflags "-X github.com/zaid/goforge/internal/version.Version=$(VERSION) -X github.com/zaid/goforge/internal/version.Commit=$(COMMIT) -X github.com/zaid/goforge/internal/version.Date=$(DATE)"
+LDFLAGS := -ldflags "-X github.com/byzkhan/goforge/internal/version.Version=$(VERSION) -X github.com/byzkhan/goforge/internal/version.Commit=$(COMMIT) -X github.com/byzkhan/goforge/internal/version.Date=$(DATE)"
 
 ## build: Compile goforge
 build:

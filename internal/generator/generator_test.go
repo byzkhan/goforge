@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/zaid/goforge/internal/config"
+	"github.com/byzkhan/goforge/internal/config"
 )
 
 func defaultOpts() config.ServiceOptions {

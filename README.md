@@ -7,7 +7,7 @@ goforge scaffolds team-ready Go HTTP services with strong defaults, low magic, a
 ## Install
 
 ```bash
-go install github.com/zaid/goforge/cmd/goforge@latest
+go install github.com/byzkhan/goforge/cmd/goforge@latest
 ```
 
 ## Usage

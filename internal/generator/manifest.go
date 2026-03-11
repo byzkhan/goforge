@@ -1,6 +1,6 @@
 package generator
 
-import "github.com/zaid/goforge/internal/config"
+import "github.com/byzkhan/goforge/internal/config"
 
 // FileEntry describes a single file to generate.
 type FileEntry struct {

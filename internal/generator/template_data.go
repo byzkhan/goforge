@@ -1,6 +1,6 @@
 package generator
 
-import "github.com/zaid/goforge/internal/config"
+import "github.com/byzkhan/goforge/internal/config"
 
 // TemplateData is the data passed to every template.
 type TemplateData struct {

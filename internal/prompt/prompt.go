@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/zaid/goforge/internal/config"
+	"github.com/byzkhan/goforge/internal/config"
 )
 
 // Prompter reads interactive input from a reader (typically os.Stdin).

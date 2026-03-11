@@ -1,6 +1,6 @@
 package main
 
-import "github.com/zaid/goforge/internal/cli"
+import "github.com/byzkhan/goforge/internal/cli"
 
 func main() {
 	cli.Execute()

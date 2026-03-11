@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/zaid/goforge/internal/config"
+	"github.com/byzkhan/goforge/internal/config"
 )
 
 // TestE2E_GeneratedServiceCompiles generates a full service to a temp dir
