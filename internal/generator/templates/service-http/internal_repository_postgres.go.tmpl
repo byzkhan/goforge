@@ -1,0 +1,45 @@
+package repository
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"{{.Module}}/internal/domain"
+)
+
+// PostgresExampleRepository implements ExampleRepository using PostgreSQL.
+type PostgresExampleRepository struct {
+	pool *pgxpool.Pool
+}
+
+// NewPostgresExampleRepository creates a PostgreSQL-backed repository.
+func NewPostgresExampleRepository(pool *pgxpool.Pool) *PostgresExampleRepository {
+	return &PostgresExampleRepository{pool: pool}
+}
+
+func (r *PostgresExampleRepository) List(ctx context.Context) ([]domain.ExampleItem, error) {
+	rows, err := r.pool.Query(ctx, "SELECT id, name FROM examples ORDER BY id")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []domain.ExampleItem
+	for rows.Next() {
+		var item domain.ExampleItem
+		if err := rows.Scan(&item.ID, &item.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (r *PostgresExampleRepository) Create(ctx context.Context, item domain.ExampleItem) (domain.ExampleItem, error) {
+	err := r.pool.QueryRow(ctx,
+		"INSERT INTO examples (name) VALUES ($1) RETURNING id",
+		item.Name,
+	).Scan(&item.ID)
+	return item, err
+}

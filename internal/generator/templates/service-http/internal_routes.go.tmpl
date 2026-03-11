@@ -1,0 +1,64 @@
+package routes
+
+import (
+	"log/slog"
+	"net/http"
+
+{{- if .UseChi}}
+	"github.com/go-chi/chi/v5"
+{{- end}}
+
+	"{{.Module}}/internal/http/handlers"
+	"{{.Module}}/internal/http/middleware"
+)
+
+// Deps holds handler dependencies for route registration.
+type Deps struct {
+	Log            *slog.Logger
+	HealthHandler  *handlers.HealthHandler
+	ExampleHandler *handlers.ExampleHandler
+}
+{{if .UseChi}}
+// New creates a chi router with all routes and middleware registered.
+func New(d Deps) http.Handler {
+	r := chi.NewRouter()
+
+	// Global middleware
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logging(d.Log))
+	r.Use(middleware.Recoverer(d.Log))
+
+	// Health checks — no auth
+	r.Get("/healthz", d.HealthHandler.Liveness)
+	r.Get("/readyz", d.HealthHandler.Readiness)
+
+	// API routes
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/examples", d.ExampleHandler.List)
+		r.Post("/examples", d.ExampleHandler.Create)
+	})
+
+	return r
+}
+{{else}}
+// New creates a stdlib ServeMux with all routes and middleware registered.
+func New(d Deps) http.Handler {
+	mux := http.NewServeMux()
+
+	// Health checks
+	mux.HandleFunc("GET /healthz", d.HealthHandler.Liveness)
+	mux.HandleFunc("GET /readyz", d.HealthHandler.Readiness)
+
+	// API routes
+	mux.HandleFunc("GET /api/v1/examples", d.ExampleHandler.List)
+	mux.HandleFunc("POST /api/v1/examples", d.ExampleHandler.Create)
+
+	// Wrap with middleware
+	var handler http.Handler = mux
+	handler = middleware.Recoverer(d.Log)(handler)
+	handler = middleware.Logging(d.Log)(handler)
+	handler = middleware.RequestID(handler)
+
+	return handler
+}
+{{end}}

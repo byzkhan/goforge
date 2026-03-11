@@ -1,0 +1,37 @@
+.PHONY: run build test lint clean
+
+BINARY := {{.Name}}
+CMD := ./cmd/{{.Name}}
+
+## run: Start the service locally
+run:
+	go run $(CMD)
+
+## build: Compile the binary
+build:
+	mkdir -p bin/
+	go build -o bin/$(BINARY) $(CMD)
+
+## test: Run all tests
+test:
+	go test ./... -v -race -count=1
+
+## lint: Run golangci-lint
+lint:
+	golangci-lint run ./...
+
+## clean: Remove build artifacts
+clean:
+	rm -rf bin/
+{{if .UsePostgres}}
+## migrate-up: Run database migrations
+migrate-up:
+	./scripts/migrate.sh up
+
+## migrate-down: Roll back last migration
+migrate-down:
+	./scripts/migrate.sh down
+{{end}}
+## help: Show this help
+help:
+	@grep -E '^##' Makefile | sed 's/## //'

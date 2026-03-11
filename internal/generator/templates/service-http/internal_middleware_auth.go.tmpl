@@ -1,0 +1,47 @@
+package middleware
+
+import (
+	"context"
+	"net/http"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
+
+	httputil "{{.Module}}/internal/http"
+)
+
+type claimsKey struct{}
+
+// JWTAuth validates Bearer tokens using HMAC-SHA256.
+// This is a stub for development — replace with your production auth.
+func JWTAuth(secret string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			auth := r.Header.Get("Authorization")
+			if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
+				httputil.Error(w, http.StatusUnauthorized, "missing or invalid token")
+				return
+			}
+
+			tokenStr := strings.TrimPrefix(auth, "Bearer ")
+			token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+				return []byte(secret), nil
+			}, jwt.WithValidMethods([]string{"HS256"}))
+			if err != nil || !token.Valid {
+				httputil.Error(w, http.StatusUnauthorized, "invalid token")
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), claimsKey{}, token.Claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// GetClaims retrieves JWT claims from the request context.
+func GetClaims(ctx context.Context) jwt.Claims {
+	if c, ok := ctx.Value(claimsKey{}).(jwt.Claims); ok {
+		return c
+	}
+	return nil
+}

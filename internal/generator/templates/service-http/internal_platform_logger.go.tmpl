@@ -1,0 +1,29 @@
+package logger
+
+import (
+	"io"
+	"log/slog"
+	"strings"
+)
+
+// New creates a structured slog.Logger with JSON output.
+// If w is nil, logs are discarded (useful for tests).
+func New(level string, w io.Writer) *slog.Logger {
+	if w == nil {
+		w = io.Discard
+	}
+
+	var l slog.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		l = slog.LevelDebug
+	case "warn":
+		l = slog.LevelWarn
+	case "error":
+		l = slog.LevelError
+	default:
+		l = slog.LevelInfo
+	}
+
+	return slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{Level: l}))
+}

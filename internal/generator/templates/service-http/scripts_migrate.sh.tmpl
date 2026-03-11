@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+shopt -s nullglob
+
+# Simple migration runner using psql.
+# For production, consider golang-migrate or goose.
+
+DB_URL="${DATABASE_URL:?DATABASE_URL is required}"
+DIR="$(cd "$(dirname "$0")/.." && pwd)/migrations"
+
+case "${1:-up}" in
+  up)
+    files=("$DIR"/*.up.sql)
+    if [[ ${#files[@]} -eq 0 ]]; then
+      echo "No migration files found."
+      exit 0
+    fi
+    for f in "${files[@]}"; do
+      echo "Applying $(basename "$f")..."
+      psql "$DB_URL" -f "$f"
+    done
+    ;;
+  down)
+    files=("$DIR"/*.down.sql)
+    if [[ ${#files[@]} -eq 0 ]]; then
+      echo "No migration files found."
+      exit 0
+    fi
+    # Reverse order for rollback.
+    for (( i=${#files[@]}-1; i>=0; i-- )); do
+      f="${files[$i]}"
+      echo "Rolling back $(basename "$f")..."
+      psql "$DB_URL" -f "$f"
+    done
+    ;;
+  *)
+    echo "Usage: $0 {up|down}"
+    exit 1
+    ;;
+esac

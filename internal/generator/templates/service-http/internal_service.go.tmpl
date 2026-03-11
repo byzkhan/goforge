@@ -1,0 +1,28 @@
+package service
+
+import (
+	"context"
+
+	"{{.Module}}/internal/domain"
+	"{{.Module}}/internal/repository"
+)
+
+// ExampleService contains business logic for example items.
+type ExampleService struct {
+	repo repository.ExampleRepository
+}
+
+// NewExampleService creates an ExampleService.
+func NewExampleService(repo repository.ExampleRepository) *ExampleService {
+	return &ExampleService{repo: repo}
+}
+
+// ListItems returns all example items.
+func (s *ExampleService) ListItems(ctx context.Context) ([]domain.ExampleItem, error) {
+	return s.repo.List(ctx)
+}
+
+// CreateItem adds a new example item.
+func (s *ExampleService) CreateItem(ctx context.Context, item domain.ExampleItem) (domain.ExampleItem, error) {
+	return s.repo.Create(ctx, item)
+}
